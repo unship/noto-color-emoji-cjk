@@ -14,7 +14,7 @@
 #   shasum -a 256 Noto-Color-Emoji-CJK.ttf
 cask "font-noto-color-emoji-cjk" do
   version "1.0.0"
-  sha256 "0" * 64 # replace with the release asset's sha256
+  sha256 "87290d472c99309ca5eabf05d3b2ff44f7635990847078bb7f977c1c824d2b65"
 
   url "https://github.com/unship/noto-color-emoji-cjk/releases/download/v#{version}/Noto-Color-Emoji-CJK.ttf"
   name "Noto Color Emoji CJK"
