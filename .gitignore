@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Fonts: source inputs and build outputs are not tracked.
+# The released Noto-Color-Emoji-CJK.ttf ships as a GitHub Release asset.
+*.ttf
+*.ttc
+*.otf
+build/
+dist/
+
+# macOS
+.DS_Store

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Noto Color Emoji CJK</title>
+<style>
+  @font-face {
+    font-family: "Noto Color Emoji CJK";
+    src: url("https://github.com/unship/noto-color-emoji-cjk/releases/latest/download/Noto-Color-Emoji-CJK.ttf") format("truetype");
+    font-display: swap;
+  }
+  :root {
+    --bg: #0d1117; --panel: #161b22; --line: #30363d;
+    --fg: #e6edf3; --dim: #8b949e; --accent: #58a6ff; --green: #3fb950;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 16px/1.6 -apple-system, "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  main { max-width: 820px; margin: 0 auto; padding: 4rem 1.25rem 6rem; }
+  h1 { font-size: 2.6rem; margin: 0 0 .3rem; letter-spacing: -.02em; }
+  .tag { color: var(--dim); font-size: 1.15rem; margin: 0 0 2rem; }
+  .glyphs {
+    font-family: "Noto Color Emoji CJK", "Apple Color Emoji", sans-serif;
+    font-size: 2.5rem; line-height: 1.7; letter-spacing: .25rem;
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; padding: 1.2rem 1.4rem; margin: 0 0 .6rem;
+    word-break: break-word;
+  }
+  .caption { color: var(--dim); font-size: .85rem; margin: 0 0 2rem; }
+  h2 { font-size: 1.25rem; margin: 2.6rem 0 .8rem; }
+  p { color: var(--fg); }
+  ul { color: var(--fg); padding-left: 1.2rem; }
+  li { margin: .35rem 0; }
+  code, pre { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+  pre {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 1rem 1.1rem; overflow-x: auto;
+    font-size: .86rem; line-height: 1.55;
+  }
+  code { color: var(--green); }
+  pre code { color: var(--fg); }
+  .cmd { color: var(--accent); }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .note {
+    border-left: 3px solid var(--accent); padding: .1rem 0 .1rem 1rem;
+    color: var(--dim); font-size: .9rem; margin: 1.5rem 0;
+  }
+  footer { border-top: 1px solid var(--line); margin-top: 3rem; padding-top: 1.2rem;
+           color: var(--dim); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Noto Color Emoji CJK</h1>
+  <p class="tag">Color emoji + symbols, every glyph pre-fit to the CJK cell —
+  for grid-aligned editors, above all Emacs.</p>
+
+  <div class="glyphs">😀 🎉 🚀 🔥 💯 ✨ 🌟 🎨 🍕 🚗 🐱 🦊 🌍 ⭐ 🌈</div>
+  <div class="glyphs">🅐 🅔 🅩 🀄 🂡 🁢 🅿 🆎 🄋 🄐 🅂 🃏 🁣 ➿ 🅥</div>
+  <p class="caption">Top: Noto color emoji. Bottom: symbols merged from Symbola
+  (enclosed alphanumerics, mahjong, dominoes, cards, arrows) — all on the same
+  grid. Color requires a browser with <code>sbix</code> support (Safari); the
+  cell alignment is identical everywhere.</p>
+
+  <h2>Why</h2>
+  <ul>
+    <li>Emacs's macOS NS build paints only <code>sbix</code> color fonts —
+        so Noto's PNG strikes are repackaged as <code>sbix</code>.</li>
+    <li>Every glyph is re-composited onto the donor CJK font's cell, so emoji
+        align to the 2-cell grid at <em>every</em> size.</li>
+    <li>Non-emoji symbols (like <code>🅔</code> U+1F154) are filled from Symbola
+        as crisp vector glyphs, scaled and centered onto the same cell.</li>
+  </ul>
+
+  <h2>Install</h2>
+  <pre><code><span class="cmd">brew</span> tap unship/fonts
+<span class="cmd">brew</span> install --cask font-noto-color-emoji-cjk</code></pre>
+
+  <h2>Use in Emacs</h2>
+  <pre><code>;; Primary: an equal-width CJK mono font (1:2 cell grid)
+(set-face-attribute 'default nil :family "Maple Mono NF CN" :height 140)
+
+;; Route emoji + symbols to the metrics-matched companion (no :size).
+(let ((f (font-spec :family "Noto Color Emoji CJK")))
+  (set-fontset-font t 'emoji nil)
+  (set-fontset-font t 'emoji f)
+  (set-fontset-font t '(#x1F000 . #x1FFFF) f))</code></pre>
+
+  <p class="note">It's a companion font: keep your monospace CJK font as the
+  primary and use this as the emoji/symbol fallback. Tune it to your CJK font by
+  rebuilding with that font as the metrics donor — see the repo.</p>
+
+  <footer>
+    <a href="https://github.com/unship/noto-color-emoji-cjk">Source on GitHub</a>
+    · Font under <a href="https://github.com/unship/noto-color-emoji-cjk/blob/main/LICENSE">OFL 1.1</a>
+    · Derived from Noto Color Emoji (OFL) + Symbola (George Douros).
+    A community derivative, not affiliated with Google or the Noto project.
+  </footer>
+</main>
+</body>
+</html>

@@ -1,0 +1,48 @@
+# Build the font and attach it to a GitHub Release when a v* tag is pushed.
+#
+# The donor (CJK mono) and Symbola sources are not redistributed in this repo;
+# set their download URLs once in the repo settings as Actions *variables*:
+#   Settings -> Secrets and variables -> Actions -> Variables
+#     DONOR_URL    -> a direct link to your CJK mono Regular .ttf (e.g. Maple Mono NF CN)
+#     SYMBOLA_URL  -> a direct link to Symbola.ttf
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch font inputs
+        run: |
+          mkdir -p build
+          curl -fsSL -o build/donor.ttf   "${{ vars.DONOR_URL }}"
+          curl -fsSL -o build/symbola.ttf "${{ vars.SYMBOLA_URL }}"
+
+      - name: Build merged font
+        run: |
+          make font \
+            DONOR="$PWD/build/donor.ttf" \
+            SYMBOLA="$PWD/build/symbola.ttf"
+
+      - name: Checksum
+        run: shasum -a 256 Noto-Color-Emoji-CJK.ttf | tee SHA256SUMS.txt
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            Noto-Color-Emoji-CJK.ttf
+            SHA256SUMS.txt
+          generate_release_notes: true

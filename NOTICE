@@ -1,0 +1,32 @@
+Noto Color Emoji CJK -- attribution & provenance
+================================================
+
+This font is a derivative work that combines:
+
+1. Noto Color Emoji
+   Copyright Google LLC and the Noto Project Authors.
+   Licensed under the SIL Open Font License, Version 1.1.
+   https://github.com/googlefonts/noto-emoji
+   The colour emoji glyphs are extracted from Noto Color Emoji's PNG bitmap
+   strikes and re-composited into an `sbix` table fitted to the CJK cell.
+
+2. Symbola
+   Copyright George Douros.
+   "In lieu of a licence: fonts and documents in this site are free for any
+   use; they may be opened, edited, modified, regenerated, posted, packaged
+   and redistributed."
+   Monochrome vector outlines for codepoints that Noto Color Emoji does not
+   cover (enclosed alphanumerics, mahjong, dominoes, playing cards,
+   supplemental arrows, ...) are derived from Symbola, then scaled and centred
+   onto the CJK cell. Symbola's grant permits this modification and
+   redistribution; the combined work is distributed under the OFL (see LICENSE).
+
+3. Maple Mono NF CN  (default metrics donor -- NOT embedded)
+   Copyright the Maple Mono Authors. SIL Open Font License, Version 1.1.
+   https://github.com/subframe7536/maple-font
+   Used ONLY at build time to read cell metrics (中 advance, ascender,
+   descender). No Maple glyph outline or bitmap is included in this font. A
+   different equal-width CJK mono font may be substituted as the donor.
+
+The combined Font Software is distributed under the SIL Open Font License,
+Version 1.1 (see LICENSE). The build scripts under scripts/ are MIT-licensed.
