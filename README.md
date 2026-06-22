@@ -79,6 +79,7 @@ must stay straight across ASCII / 中文 / 😀 / 🅔 rows.
 
 ```sh
 brew tap unship/fonts
+brew trust unship/fonts          # third-party taps need a one-time trust
 brew install --cask font-noto-color-emoji-cjk
 ```
 
