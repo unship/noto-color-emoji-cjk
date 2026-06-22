@@ -22,8 +22,7 @@ NOTO_URL ?= https://github.com/googlefonts/noto-emoji/raw/main/fonts/NotoColorEm
 NAME        ?= Noto Color Emoji CJK
 EMOJI_H_EM  ?= 0.86
 SYMBOL_H_EM ?= 0.78
-LO          ?= 0x1F000
-HI          ?= 0x1FFFF
+RANGES      ?= 1F000-1FFFF,2300-23FF,2600-27BF
 AMBIGUOUS   ?= narrow   # ambiguous-width symbols: narrow=1 cell (kitty), wide=2 cells
 
 OUT  := Noto-Color-Emoji-CJK.ttf
@@ -45,13 +44,13 @@ $(BASE): scripts/make_emoji_font.py $(NOTO)
 	$(PYTHON) scripts/make_emoji_font.py $(NOTO) "$(DONOR)" $(BASE) $(EMOJI_H_EM) 0.0 "$(NAME)"
 
 $(OUT): scripts/merge_symbola.py $(BASE)
-	$(PYTHON) scripts/merge_symbola.py $(BASE) "$(SYMBOLA)" "$(DONOR)" $(OUT) $(LO) $(HI) $(SYMBOL_H_EM) $(AMBIGUOUS)
+	$(PYTHON) scripts/merge_symbola.py $(BASE) "$(SYMBOLA)" "$(DONOR)" $(OUT) "$(RANGES)" $(SYMBOL_H_EM) $(AMBIGUOUS)
 
 font: $(OUT)
 
 # Proof-of-concept: a single vector glyph (🅔 U+1F154) in the sbix font.
 poc: $(BASE)
-	$(PYTHON) scripts/merge_symbola.py $(BASE) "$(SYMBOLA)" "$(DONOR)" build/poc.ttf 0x1F154 0x1F154 $(SYMBOL_H_EM) $(AMBIGUOUS)
+	$(PYTHON) scripts/merge_symbola.py $(BASE) "$(SYMBOLA)" "$(DONOR)" build/poc.ttf 1F154 $(SYMBOL_H_EM) $(AMBIGUOUS)
 	cp build/poc.ttf "$(HOME)/Library/Fonts/$(OUT)"
 	@echo ">> POC installed. Restart the Emacs daemon, then check 🅔 (U+1F154)."
 

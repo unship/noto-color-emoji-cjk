@@ -2,12 +2,14 @@
 """Merge Symbola's vector glyphs into the recomposited sbix emoji font.
 
 `make_emoji_font.py` produces a colour `sbix` font whose emoji sit on the donor
-CJK cell, but it only carries actual emoji. Non-emoji codepoints in the SMP
-emoji blocks (enclosed alphanumerics like U+1F154 NEGATIVE CIRCLED LATIN CAPITAL
-LETTER E, mahjong, dominoes, playing cards, supplemental arrows) have no glyph
-and render as tofu. This script fills those holes with Symbola's outlines,
-re-fit to the same CJK cell, added as plain `glyf` glyphs (no `sbix` strike) so
-they render as crisp monochrome vector at any size.
+CJK cell. This script makes the font match kitty by *presentation*: every
+codepoint that is NOT Unicode Emoji_Presentation=Yes -- the text-presentation
+symbols (enclosed alphanumerics like U+1F154 🅔, mahjong, cards, and dingbats
+like ★ ❤ ☀ that kitty draws as 1-cell mono) -- is routed to a cell-fitted
+Symbola outline, added as a plain `glyf` glyph (no `sbix` strike) so it renders
+as crisp monochrome vector at any size. Emoji-presentation codepoints (😀 ⌚ ⏰
+✅) keep their 2-cell colour glyph. This OVERRIDES the colour glyph for
+text-presentation chars Noto happens to cover (❤ ☀ ✈ …), matching kitty.
 
 Cell width per codepoint follows wcwidth -- the same rule kitty uses: W/F -> 2
 cells, everything else -> 1 cell. East-Asian *Ambiguous* codepoints (the
@@ -18,16 +20,18 @@ cell, centred horizontally, and sat on the baseline.
 
 Usage:
   merge_symbola.py BASE.ttf SYMBOLA.ttf DONOR_CJK.ttf OUT.ttf \
-                   [LO=0x1F000] [HI=0x1FFFF] [TARGET_H_EM=0.78] [AMBIGUOUS=narrow|wide]
+                   [RANGES=1F000-1FFFF,2300-23FF,2600-27BF] [TARGET_H_EM=0.78] [AMBIGUOUS=narrow|wide]
 
   BASE.ttf    output of make_emoji_font.py (sbix colour emoji on the CJK cell)
   SYMBOLA.ttf Symbola source (monochrome vector symbols)
   DONOR_CJK   the SAME CJK mono font used to build BASE (the metrics donor)
   OUT.ttf     merged font
+  RANGES      comma-separated hex codepoint ranges to fill (e.g. "2600-27BF,1F154")
 
-POC tip: pass LO==HI to merge a single codepoint, e.g. `... OUT.ttf 0x1F154 0x1F154`.
+POC tip: pass a single codepoint as RANGES, e.g. `... OUT.ttf 1F154`.
 """
 import sys
+import os
 import unicodedata
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.sbixGlyph import Glyph as SbixGlyph
@@ -38,14 +42,51 @@ from fontTools.pens.transformPen import TransformPen
 from fontTools.misc.transform import Transform
 
 base_p, symb_p, donor_p, out_p = sys.argv[1:5]
-LO = int(sys.argv[5], 0) if len(sys.argv) > 5 else 0x1F000
-HI = int(sys.argv[6], 0) if len(sys.argv) > 6 else 0x1FFFF
-TARGET_H_EM = float(sys.argv[7]) if len(sys.argv) > 7 else 0.78
-# Width policy for East-Asian *Ambiguous* codepoints (the enclosed alphanumerics,
-# 🅔 etc.). Default "narrow" = 1 cell, matching kitty / standard wcwidth. Set
-# "wide" for a CJK-context 2-cell layout.
-AMBIG_WIDE = (sys.argv[8] if len(sys.argv) > 8 else "narrow").lower().startswith("w")
+RANGES_STR = sys.argv[5] if len(sys.argv) > 5 else "1F000-1FFFF"
+TARGET_H_EM = float(sys.argv[6]) if len(sys.argv) > 6 else 0.78
+# Width policy for East-Asian *Ambiguous* codepoints (the enclosed alphanumerics
+# 🅔, dingbats like ★ …). Default "narrow" = 1 cell, matching kitty / standard
+# wcwidth. Set "wide" for a CJK-context 2-cell layout.
+AMBIG_WIDE = (sys.argv[7] if len(sys.argv) > 7 else "narrow").lower().startswith("w")
 WIDTH_FILL = 0.92   # max fraction of the cell the ink may span before width-clamp
+
+def parse_ranges(s):
+    rs = []
+    for part in s.split(","):
+        part = part.strip()
+        if not part:
+            continue
+        a, _, b = part.partition("-")
+        lo = int(a, 16)
+        rs.append((lo, int(b, 16) if b else lo))
+    return rs
+
+def iter_codepoints(ranges):
+    for lo, hi in ranges:
+        for cp in range(lo, hi + 1):
+            yield cp
+
+def load_emoji_presentation():
+    """Codepoints with Unicode Emoji_Presentation=Yes (kept as 2-cell colour).
+    Snapshot lives next to this script; regenerate from
+    unicode.org/Public/UCD/latest/ucd/emoji/emoji-data.txt."""
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        "emoji-presentation.txt")
+    pres = set()
+    with open(path) as fh:
+        for line in fh:
+            line = line.split("#")[0].strip()
+            if not line:
+                continue
+            if ".." in line:
+                a, b = line.split("..")
+                pres.update(range(int(a, 16), int(b, 16) + 1))
+            else:
+                pres.add(int(line, 16))
+    return pres
+
+RANGES = parse_ranges(RANGES_STR)
+EMOJI_PRES = load_emoji_presentation()
 
 base = TTFont(base_p)
 symb = TTFont(symb_p)
@@ -70,8 +111,8 @@ hmtx = base["hmtx"]
 order = list(base.getGlyphOrder())
 new_names = []
 
-for cp in range(LO, HI + 1):
-    if cp in base_cmap:           # base already covers it (emoji) -> keep colour
+for cp in iter_codepoints(RANGES):
+    if cp in EMOJI_PRES:          # default emoji presentation -> keep 2-cell colour
         continue
     sname = symb_cmap.get(cp)
     if not sname:                 # Symbola lacks it -> nothing to fill

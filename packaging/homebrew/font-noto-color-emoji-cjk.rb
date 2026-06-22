@@ -13,8 +13,8 @@
 # `version`/`sha256` are filled per release. Get the sha256 with:
 #   shasum -a 256 Noto-Color-Emoji-CJK.ttf
 cask "font-noto-color-emoji-cjk" do
-  version "1.0.0"
-  sha256 "87290d472c99309ca5eabf05d3b2ff44f7635990847078bb7f977c1c824d2b65"
+  version "1.1.0"
+  sha256 "7eeb2cee92f7129f753b3591e47949a6c881cc8804d7952b92f8f032d97c63c6"
 
   url "https://github.com/unship/noto-color-emoji-cjk/releases/download/v#{version}/Noto-Color-Emoji-CJK.ttf"
   name "Noto Color Emoji CJK"

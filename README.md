@@ -48,7 +48,10 @@ Pair a monospace CJK font (the *primary*) with this font (the emoji/symbol
 (let ((f (font-spec :family "Noto Color Emoji CJK")))
   (set-fontset-font t 'emoji nil)
   (set-fontset-font t 'emoji f)
-  (set-fontset-font t '(#x1F000 . #x1FFFF) f))   ; enclosed alphanumerics, cards, …
+  (dolist (r '((#x1F000 . #x1FFFF)     ; emoji, enclosed alphanumerics, cards …
+               (#x2600  . #x27BF)      ; dingbats: ★ ❤ ☀ ✈ …
+               (#x2300  . #x23FF)))    ; technical: ⌘ ⌥ ⌚ ⏰ …
+    (set-fontset-font t r f)))
 ```
 
 Doom Emacs:
@@ -61,7 +64,8 @@ Doom Emacs:
   (let ((f (font-spec :family "Noto Color Emoji CJK")))
     (set-fontset-font t 'emoji nil)
     (set-fontset-font t 'emoji f)
-    (set-fontset-font t '(#x1F000 . #x1FFFF) f)))
+    (dolist (r '((#x1F000 . #x1FFFF) (#x2600 . #x27BF) (#x2300 . #x23FF)))
+      (set-fontset-font t r f))))
 ```
 
 Open [`tests/alignment.md`](tests/alignment.md) in GUI Emacs — every `|` column
@@ -110,7 +114,7 @@ CBDT build, runs the recompositor, then the Symbola merge. Useful targets:
 | `make install` | copy the font into `~/Library/Fonts` |
 | `make clean` | remove `build/` and the output |
 
-Override `DONOR`, `SYMBOLA`, `EMOJI_H_EM`, `SYMBOL_H_EM`, `LO`, `HI` as needed.
+Override `DONOR`, `SYMBOLA`, `EMOJI_H_EM`, `SYMBOL_H_EM`, `RANGES`, `AMBIGUOUS` as needed.
 
 ## How it works
 
@@ -121,15 +125,16 @@ Two stages, both fitting glyphs to the donor CJK cell:
    the baseline, each PNG is re-composited (trim to ink → scale to ≈`中`'s height
    → center in the advance → bottom on the baseline) rather than offset.
 
-2. **`scripts/merge_symbola.py`** — for every codepoint in the emoji blocks that
-   Symbola covers but the emoji font does not, it copies Symbola's **vector**
-   outline, picks the cell width from
-   [`unicodedata.east_asian_width`](https://docs.python.org/3/library/unicodedata.html)
-   (`W/F/A → 2 cells`, else `1 cell`), scales the ink to ≈`中`'s height (clamped
-   to the cell), centers it, and adds it as a plain `glyf` glyph **with no `sbix`
-   strike** — so it renders as crisp monochrome vector at any size while the
-   emoji stay color. The result is a hybrid `sbix` (color) + `glyf` (mono) font
-   on one cell grid.
+2. **`scripts/merge_symbola.py`** — splits codepoints by **presentation**, the
+   way kitty does. `Emoji_Presentation=Yes` chars (😀 ⌚ ⏰ ✅) keep their 2-cell
+   color glyph; everything else — the *text-presentation* symbols (🅔 ★ ❤ ☀ ✈,
+   enclosed alphanumerics, mahjong, cards) — is routed to Symbola's **vector**
+   outline at `wcwidth` width (`W/F → 2 cells`, else `1 cell`), scaled to ≈`中`'s
+   height, centered, and added as a plain `glyf` glyph **with no `sbix` strike**
+   (overriding Noto's color glyph for text-presentation chars it happens to
+   cover, like ❤ ☀). The result is a hybrid `sbix` (color) + `glyf` (mono) font
+   whose per-codepoint width and presentation match kitty. The presentation set
+   is snapshotted in `scripts/emoji-presentation.txt`.
 
 ## License
 
