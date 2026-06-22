@@ -27,7 +27,7 @@ char-width / auto-composition / dingbat-routing fixes).
 |ア|イ|ウ|エ|オ|カ|キ|ク|ケ|コ|   Katakana
 |한|국|어|테|스|트|정|렬|확|인|   Hangul
 |😀|🎉|🚀|🔥|💯|✨|🌟|🎨|🍕|🚗|   modern emoji (colour, 2 cells)
-|❤|⚙|✳|☀|★★|☎|✈|☂|✂|✏|   ⚠️ bare dingbats
+|❤|⚙|✳|☀|★|☎|✈|☂|✂|✏|   ⚠️ bare dingbats
 ```
 
 ## 2. Right-edge alignment — all rows should end at column 30 ✅
