@@ -9,14 +9,16 @@ and render as tofu. This script fills those holes with Symbola's outlines,
 re-fit to the same CJK cell, added as plain `glyf` glyphs (no `sbix` strike) so
 they render as crisp monochrome vector at any size.
 
-Cell width per codepoint comes from East_Asian_Width: W/F/A -> 2 cells (= the 中
-advance, matching `eaw-fullwidth`), everything else -> 1 cell (= ASCII = half a
-2:1 mono cell). The outline is scaled to ~the CJK ink height, clamped to the
+Cell width per codepoint follows wcwidth -- the same rule kitty uses: W/F -> 2
+cells, everything else -> 1 cell. East-Asian *Ambiguous* codepoints (the
+enclosed alphanumerics like U+1F154 🅔) are therefore **1 cell** by default,
+matching kitty / the terminal. Pass AMBIGUOUS=wide for a CJK-context 2-cell
+layout instead. The outline is scaled to ~the CJK ink height, clamped to the
 cell, centred horizontally, and sat on the baseline.
 
 Usage:
   merge_symbola.py BASE.ttf SYMBOLA.ttf DONOR_CJK.ttf OUT.ttf \
-                   [LO=0x1F000] [HI=0x1FFFF] [TARGET_H_EM=0.78]
+                   [LO=0x1F000] [HI=0x1FFFF] [TARGET_H_EM=0.78] [AMBIGUOUS=narrow|wide]
 
   BASE.ttf    output of make_emoji_font.py (sbix colour emoji on the CJK cell)
   SYMBOLA.ttf Symbola source (monochrome vector symbols)
@@ -39,6 +41,10 @@ base_p, symb_p, donor_p, out_p = sys.argv[1:5]
 LO = int(sys.argv[5], 0) if len(sys.argv) > 5 else 0x1F000
 HI = int(sys.argv[6], 0) if len(sys.argv) > 6 else 0x1FFFF
 TARGET_H_EM = float(sys.argv[7]) if len(sys.argv) > 7 else 0.78
+# Width policy for East-Asian *Ambiguous* codepoints (the enclosed alphanumerics,
+# 🅔 etc.). Default "narrow" = 1 cell, matching kitty / standard wcwidth. Set
+# "wide" for a CJK-context 2-cell layout.
+AMBIG_WIDE = (sys.argv[8] if len(sys.argv) > 8 else "narrow").lower().startswith("w")
 WIDTH_FILL = 0.92   # max fraction of the cell the ink may span before width-clamp
 
 base = TTFont(base_p)
@@ -82,7 +88,8 @@ for cp in range(LO, HI + 1):
         continue
 
     eaw = unicodedata.east_asian_width(chr(cp))
-    adv = CELL2 if eaw in ("W", "F", "A") else CELL1
+    wide = eaw in ("W", "F") or (AMBIG_WIDE and eaw == "A")   # wcwidth / kitty
+    adv = CELL2 if wide else CELL1
 
     k = TARGET_H / ink_h                      # scale to target ink height
     if ink_w * k > adv * WIDTH_FILL:          # too wide -> clamp to the cell
